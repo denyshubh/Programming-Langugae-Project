@@ -1,0 +1,147 @@
+# simple INTs
+$ echo '42' | ./desig-inits.sh
+42
+
+# empty initializer
+$ echo '{}' | ./desig-inits.sh
+[]
+
+# simple positional initializers
+$ echo '{22, 33}' | ./desig-inits.sh
+[22,33]
+
+# nested initializer
+$ echo '{22, {44, 99}, 33,}' | ./desig-inits.sh | json_pp
+[
+   22,
+   [
+      44,
+      99
+   ],
+   33
+]
+
+# nested initializer + simple designated initializer + trailing comma 
+$ echo '{22, {44, 99}, [6]=33,}' | ./desig-inits.sh | json_pp
+[
+   22,
+   [
+      44,
+      99
+   ],
+   0,
+   0,
+   0,
+   0,
+   33
+]
+
+# nested initializer + range designated initializer
+$ echo '{22, {44, 99}, [6...8]=33,}' | ./desig-inits.sh | json_pp
+[
+   22,
+   [
+      44,
+      99
+   ],
+   0,
+   0,
+   0,
+   0,
+   33,
+   33,
+   33
+]
+
+# complex intializers
+$ echo '{22, {44, 99}, [6...8]={33, [3]=4, 77}, 99,}' \
+   | ./desig-inits.sh | json_pp
+[
+   22,
+   [
+      44,
+      99
+   ],
+   0,
+   0,
+   0,
+   0,
+   [
+      33,
+      0,
+      0,
+      4,
+      77
+   ],
+   [
+      33,
+      0,
+      0,
+      4,
+      77
+   ],
+   [
+      33,
+      0,
+      0,
+      4,
+      77
+   ],
+   99
+]
+
+# complex initializers with overwrites
+$ echo '{22, {44, 99}, [6...8]={33, [3]=4, 77}, [7...8]=99,}' | ./desig-inits.sh | json_pp
+[
+   22,
+   [
+      44,
+      99
+   ],
+   0,
+   0,
+   0,
+   0,
+   [
+      33,
+      0,
+      0,
+      4,
+      77
+   ],
+   99,
+   99
+]
+
+# error: missing }
+$ echo '{' | ./desig-inits.sh
+error: expecting '}' but got 'EOF'
+{
+ ^
+
+# non-zero status after error
+$ echo $?
+1
+
+# error: incorrect range token
+$ echo '{ [3..5]= 99}' | ./desig-inits.sh
+error: expecting ']' but got '.'
+{ [3..5]= 99}
+    ^
+
+# extra ,
+$ echo '{ 99, ,}' | ./desig-inits.sh
+error: expecting '}' but got ','
+{ 99, ,}
+      ^
+# missing ]
+$ echo '{ 1, 2, [99 = 33 ,}' | ./desig-inits.sh
+error: expecting ']' but got '='
+{ 1, 2, [99 = 33 ,}
+            ^
+# extra }
+$ echo '{ 1, 2, }}' | ./desig-inits.sh
+error: expecting 'EOF' but got '}'
+{ 1, 2, }}
+         ^
+	 

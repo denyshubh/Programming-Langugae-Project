@@ -1,0 +1,17 @@
+val
+  : INT
+  | '{' initializers '}'
+  ;
+ initializers
+  : initializer ( ',' initializer )* ','? //optional comma after last init
+  | //empty
+  ;
+initializer
+  : '[' INT '] '=' val              //simple designated initializer
+  | '[' INT '...' INT ']' '=' val   //range designated initializer
+  | val                             //positional initializer
+  ;
+
+
+// INT is a terminal which matches one-or-more digits.  All other terminals
+// enclosed within quotes match literally.
