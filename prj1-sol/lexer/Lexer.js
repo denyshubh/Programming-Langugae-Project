@@ -233,5 +233,7 @@ function scan(input){
   }
   return tok
 }
+// test this module
+// console.log(scan('{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}'))
 
-console.log(scan('{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}'))
+module.exports = Lexer;
