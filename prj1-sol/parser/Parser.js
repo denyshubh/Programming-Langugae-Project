@@ -1,6 +1,6 @@
-const Token = require('../lexer/Token');
-const Lexer = require('../lexer/Lexer');
-const AST = require('../ast/Ast');
+const Token = require("../lexer/Token");
+const Lexer = require("../lexer/Lexer");
+const AST = require("../ast/Ast");
 
 /**
  * Parser implementation for a language.
@@ -44,7 +44,9 @@ class Parser {
     if (this.currentToken.is(tokenType)) {
       this.currentToken = this.lexer.getNextToken();
     } else {
-      Parser.error(`You provided unexpected token type "${tokenType}" while current token is ${this.currentToken}`);
+      Parser.error(
+        `You provided unexpected token type "${tokenType}" while current token is ${this.currentToken}`
+      );
     }
 
     return this;
@@ -64,58 +66,52 @@ class Parser {
    *     | '{' initializers '}'
    *
    * @returns {Node}
-  */
+   */
   val() {
-    console.log('')
-		const token = this.currentToken;
-    let node = null;
-		if (token.is(Token.NUMBER)) { 
-
-			this.eat(Token.NUMBER); 
-			return new AST(token.value);
-
-		} else if (token.is(Token.LCURLY)) {
-
-				this.eat(Token.LCURLY);
-				node = this.initializers()
-				this.eat(Token.RCURLY)
-				return new AST(node, Token.LCURLY, Token.RCURLY)
-
-		}
-  
+    const token = this.currentToken;
+    let node = "start";
+    if (token.is(Token.NUMBER)) {
+      this.eat(Token.NUMBER);
+      return new AST(token.value);
+    } else if (token.is(Token.LCURLY)) {
+      this.eat(Token.LCURLY);
+      node = this.initializers();
+      this.eat(Token.RCURLY);
+      return new AST(node, Token.LCURLY, Token.RCURLY);
+    }
   }
 
-	/**
-	 * initializers : initializer (',' initializer )* , ? 
-	 * | empty
+  /**
+   * initializers : initializer (',' initializer )* , ?
+   * | empty
    *
    * @returns {Node}
-  */
-	initializers() {
-			let node = this.initializer();
-	
-			while ([Token.COMMA, Token.ENDCOMMA].some(type => this.currentToken.is(type))) {
-				const token = this.currentToken;
-				if (token.is(Token.COMMA)) {
-					
-					this.eat(Token.COMMA);
-					node = this.initializer();
-					return new AST(node, Token.COMMA);
+   */
+  initializers() {
+    let node = this.initializer();
+    const nodes = [];
+    while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
+      const token = this.currentToken;
+      if (token.is(Token.COMMA)) {
+        this.eat(Token.COMMA);
+        node = this.initializer();
+        nodes.push(new AST(node, Token.COMMA));
+      } else {
+        node.push(this.empty());
+      }
+    }
+    if ([Token.ENDCOMMA].some((type) => this.currentToken.is(type))) {
+        console.log("End Comma Called")
+        nodes.push(new AST(node, Token.ENDCOMMA));
+    }
 
-				} else if (token.is(Token.ENDCOMMA)) {
+    return nodes;
 
-					this.eat(Token.ENDCOMMA);
-					return new AST(node, Token.ENDCOMMA);
+  }
 
-				} else {
-					return this.empty();
-				}
-			}
-	}
-			
   /**
-	 * initializer : '[' INT temp
-  *  						 | val
+   * initializer : '[' INT temp
+   *  						 | val
    *
    * @returns {Node}
    */
@@ -124,38 +120,42 @@ class Parser {
     const token = this.currentToken;
     let node = null;
     if (token.is(Token.LSQUARE)) {
-      	this.eat(Token.LSQUARE);
-      	this.eat(Token.NUMBER);
-				node = this.temp();
-     	  return new AST(node, Token.LSQUARE, Token.NUMBER);
-    } else 
-				node = this.val();
-      	return new AST(node);
-    } 
+      this.eat(Token.LSQUARE);
+      this.eat(Token.NUMBER);
+      node = this.temp();
+      return new AST(node, Token.LSQUARE, Token.NUMBER);
+    } else node = this.val();
+    return new AST(node);
+  }
 
-	/**
-	 * temp : ']' '=' val 
-	 * 			| '...' INT ']' '=' val
-	 */
+  /**
+   * temp : ']' '=' val
+   * 			| '...' INT ']' '=' val
+   */
 
-	temp() {
-		const token = this.currentToken;
+  temp() {
+    const token = this.currentToken;
     let node = null;
-		if (token.is(Token.RSQUARE)) {
-        this.eat(Token.RSQUARE);
-        this.eat(Token.EQUAL);
-        node = this.val();
-        return new AST(node, Token.RSQUARE, Token.EQUAL);
-		} else if(token.is(Token.RANGE)){
-        this.eat(Token.RANGE);
-        this.eat(Token.NUMBER);
-        this.eat(Token.RSQUARE);
-        this.eat(Token.EQUAL);
-        node = this.val();
-        return new AST(node, Token.RANGE, Token.NUMBER, Token.RSQUARE, Token.EQUAL);
-		}
-	}
-
+    if (token.is(Token.RSQUARE)) {
+      this.eat(Token.RSQUARE);
+      this.eat(Token.EQUAL);
+      node = this.val();
+      return new AST(node, Token.RSQUARE, Token.EQUAL);
+    } else if (token.is(Token.RANGE)) {
+      this.eat(Token.RANGE);
+      this.eat(Token.NUMBER);
+      this.eat(Token.RSQUARE);
+      this.eat(Token.EQUAL);
+      node = this.val();
+      return new AST(
+        node,
+        Token.RANGE,
+        Token.NUMBER,
+        Token.RSQUARE,
+        Token.EQUAL
+      );
+    }
+  }
 
   /**
    * Parses an input source program and returns an AST.
@@ -182,8 +182,10 @@ class Parser {
   }
 }
 
-// Test the code 
-const parser = new Parser('{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}');
+// Test the code
+const parser = new Parser(
+  "{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}"
+);
 console.log(parser.parse());
 
 module.exports = Parser;
