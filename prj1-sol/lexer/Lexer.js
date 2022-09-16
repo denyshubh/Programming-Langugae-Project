@@ -96,10 +96,18 @@ class Lexer {
    * into the token
    */
   range(){
+      let count = 1;
       while(this.currentChar && /\./.test(this.currentChar)) {
         this.advance();
+        count++;
       }
-      return Token.create(Token.RANGE, '...');
+      if (count == 4) {
+        return Token.create(Token.RANGE, '...');
+      } 
+
+      return Lexer.error("Please provide a valid range symbol (...) ")
+      
+      
   }
 
 
@@ -118,17 +126,17 @@ class Lexer {
       this.advance();
     }
 
-    if (this.currentChar === '.') {
-      number += this.currentChar;
-      this.advance();
+    // if (this.currentChar === '.') {
+    //   number += this.currentChar;
+    //   this.advance();
 
-      while (this.currentChar && /\d/.test(this.currentChar)) {
-        number += this.currentChar;
-        this.advance();
-      }
+    //   while (this.currentChar && /\d/.test(this.currentChar)) {
+    //     number += this.currentChar;
+    //     this.advance();
+    //   }
 
-      return Token.create(Token.NUMBER, parseFloat(number)); // We can change our token to find out the floating number
-    }
+    //   return Token.create(Token.NUMBER, parseFloat(number)); // We can change our token to find out the floating number
+    // }
 
     return Token.create(Token.NUMBER, parseInt(number));
   }
@@ -172,11 +180,6 @@ class Lexer {
         return Token.create(Token.COMMA, ',');
       }
 
-      if (this.currentChar === ',' && this.peek() === '}') {
-        this.advance();
-        return Token.create(Token.ENDCOMMA, ',');
-      }
-
       if (this.currentChar === '[') {
         this.advance();
         return Token.create(Token.LSQUARE, '[');
@@ -199,11 +202,6 @@ class Lexer {
 
       if (this.currentChar === '.') {
         return this.range()
-      }
-
-      if (/./.test(this.currentChar)) {
-        this.advance();
-        return Token.create(Token.GARBAGE, this.currentChar);
       }
 
       Lexer.error(`Unexpected character: ${this.currentChar}`);

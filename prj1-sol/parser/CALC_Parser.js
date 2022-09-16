@@ -1,6 +1,5 @@
 const Token = require("../lexer/Token");
 const Lexer = require("../lexer/Lexer");
-const AST = require("../ast/Ast");
 
 /**
  * Parser implementation for a language.
@@ -9,7 +8,7 @@ const AST = require("../ast/Ast");
  * @class
  * @since 1.0.0
  */
-class Parser {
+class CALCParser {
   /**
    * Creates new parser instance.
    * It accepts as an input source code of a program.
@@ -44,7 +43,7 @@ class Parser {
     if (this.currentToken.is(tokenType)) {
       this.currentToken = this.lexer.getNextToken();
     } else {
-      Parser.error(
+      CALCParser.error(
         `You provided unexpected token type "${tokenType}" while current token is ${this.currentToken}`
       );
     }
@@ -58,7 +57,7 @@ class Parser {
    * @returns {NoOperation}
    */
   empty() {
-    return new AST("empty");
+    return [];
   }
 
   /**
@@ -67,18 +66,19 @@ class Parser {
    *
    * @returns {Node}
    */
-  val() {
+  val(array) {
     const token = this.currentToken;
-    let node = "start";
-    if (token.is(Token.NUMBER)) {
-      this.eat(Token.NUMBER);
-      return new AST(token.value);
-    } else if (token.is(Token.LCURLY)) {
+    if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return token.value; }
+    if (token.is(Token.LCURLY)) {
       this.eat(Token.LCURLY);
-      node = this.initializers();
-      this.eat(Token.RCURLY);
-      return new AST(node, Token.LCURLY, Token.RCURLY);
-    }
+      array.push([]);
+      this.initializers(array[array.length-1]);
+      return array
+    } 
+    if (token.is(Token.RCURLY)) {  this.eat(Token.RCURLY); return array }
+
+    CALCParser.error(`Invalid Token at the given position ${token}`);
+    
   }
 
   /**
@@ -87,26 +87,16 @@ class Parser {
    *
    * @returns {Node}
    */
-  initializers() {
-    let node = this.initializer();
-    const nodes = [];
+  initializers(array) {
+    this.initializer(array);
+
     while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
       const token = this.currentToken;
       if (token.is(Token.COMMA)) {
         this.eat(Token.COMMA);
-        node = this.initializer();
-        nodes.push(new AST(node, Token.COMMA));
-      } else {
-        node.push(this.empty());
+        this.initializer(array);
       }
     }
-    if ([Token.ENDCOMMA].some((type) => this.currentToken.is(type))) {
-        console.log("End Comma Called")
-        nodes.push(new AST(node, Token.ENDCOMMA));
-    }
-
-    return nodes;
-
   }
 
   /**
@@ -116,16 +106,29 @@ class Parser {
    * @returns {Node}
    */
 
-  initializer() {
+  initializer(array) {
     const token = this.currentToken;
-    let node = null;
     if (token.is(Token.LSQUARE)) {
       this.eat(Token.LSQUARE);
+      const n = this.currentToken.value; // storing the number before eating it.
+      if (typeof n === 'number') { 
+        const min = Math.min(array.length, n);
+        const max = Math.max(array.length, n);
+        for (let i=min; i<max; i++) { array.push(0); }
+      }
       this.eat(Token.NUMBER);
-      node = this.temp();
-      return new AST(node, Token.LSQUARE, Token.NUMBER);
-    } else node = this.val();
-    return new AST(node);
+      this.temp(array);
+      
+    } else { 
+        const val = this.val(array); 
+        /**
+         * Some Recursives calls are returing array instead of NUMBER, 
+         * Using conditional statement to remoove that bug.
+         */
+        if (typeof val === 'number') {
+          array.push(val); 
+        }
+      }
   }
 
   /**
@@ -133,28 +136,34 @@ class Parser {
    * 			| '...' INT ']' '=' val
    */
 
-  temp() {
+  temp(array) {
     const token = this.currentToken;
-    let node = null;
     if (token.is(Token.RSQUARE)) {
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      node = this.val();
-      return new AST(node, Token.RSQUARE, Token.EQUAL);
+      const val = this.val(array);
+      /**
+       * Some Recursives calls are returing array instead of NUMBER, 
+       * Using conditional statement to remoove that bug.
+       */
+      if (typeof val === 'number') { array.push(val) ; }
     } else if (token.is(Token.RANGE)) {
       this.eat(Token.RANGE);
+      const n = this.currentToken.value; // storing number before eating it
       this.eat(Token.NUMBER);
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      node = this.val();
-      return new AST(
-        node,
-        Token.RANGE,
-        Token.NUMBER,
-        Token.RSQUARE,
-        Token.EQUAL
-      );
-    }
+      const val = this.val(array);
+      /**
+       * Some Recursives calls are returing array instead of NUMBER, 
+       * Using conditional statement to remoove that bug.
+       */
+      if (typeof val === 'number') {
+        const min = Math.min(array.length, n);
+        const max = Math.max(array.length, n);
+        for(let i=min; i<=max; i++) { array.push(val) };
+      }
+    } else { CALCParser.error(`Invalid syntax, expecting ] or ... and got ${token.value}`); }
   }
 
   /**
@@ -168,7 +177,7 @@ class Parser {
    * parser.parse(); // return an object that represents an AST of source program
    */
   parse() {
-    return this.val();
+    return this.val([]);
   }
 
   /**
@@ -182,10 +191,4 @@ class Parser {
   }
 }
 
-// Test the code
-const parser = new Parser(
-  "{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}"
-);
-console.log(parser.parse());
-
-module.exports = Parser;
+module.exports = CALCParser;

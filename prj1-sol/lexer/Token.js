@@ -102,18 +102,8 @@ class Token {
      * @returns {String}
      */
     static get COMMA() {
-      return 'COMMA';
+      return ',';
     }
-
-    /**
-     * Returns a Token type for a comma symbol (,).
-     *
-     * @static
-     * @returns {String}
-     */
-         static get ENDCOMMA() {
-          return 'ENDCOMMA';
-        }
   
     /**
      * Returns a Token type for a equal symbol (=).
@@ -122,7 +112,7 @@ class Token {
      * @returns {String}
      */
     static get EQUAL() {
-      return 'EQUAL';
+      return '=';
     }
   
     /**
@@ -132,7 +122,7 @@ class Token {
      * @returns {String}
      */
     static get RANGE() {
-      return 'RANGE';
+      return '...';
     }
   
     /**
@@ -142,7 +132,7 @@ class Token {
      * @returns {String}
      */
     static get RCURLY() {
-      return 'RCURLY';
+      return '}';
     }
   
     /**
@@ -152,7 +142,7 @@ class Token {
      * @returns {String}
      */
     static get LCURLY() {
-      return 'LCURLY';
+      return '{';
     }
   
     /**
@@ -162,7 +152,7 @@ class Token {
      * @returns {String}
      */
     static get RSQUARE() {
-      return 'RSQUARE';
+      return ']';
     }
     
     /**
@@ -172,7 +162,7 @@ class Token {
      * @returns {String}
      */
     static get LSQUARE() {
-      return 'LSQUARE';
+      return '[';
     }
   
     /**
