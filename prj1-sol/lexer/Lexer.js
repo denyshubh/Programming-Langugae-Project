@@ -16,7 +16,7 @@ class Lexer {
    * const lexer = new Lexer('2 + 5');
    */
   constructor(input) {
-    this.input = input;
+    this.input = input.replace(/\s+/g, ''); // remove all the whitespace from the input string
     this.position = 0;
     this.currentChar = this.input[this.position];
   }
@@ -173,6 +173,11 @@ class Lexer {
       if (this.currentChar === '=') {
         this.advance();
         return Token.create(Token.EQUAL, '=');
+      }
+
+      if (this.currentChar === ',' && this.peek() === '}') {
+        this.advance();
+        return Token.create(Token.ENDCOMMA, ',');
       }
 
       if (this.currentChar === ',') {

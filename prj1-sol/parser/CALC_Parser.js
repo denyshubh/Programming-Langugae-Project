@@ -1,5 +1,6 @@
 const Token = require("../lexer/Token");
 const Lexer = require("../lexer/Lexer");
+const AST = require("../ast/Ast");
 
 /**
  * Parser implementation for a language.
@@ -9,8 +10,8 @@ const Lexer = require("../lexer/Lexer");
  * @since 1.0.0
  */
 class CALCParser {
-  /**
-   * Creates new parser instance.
+  /** 
+   * * Creates new parser instance.
    * It accepts as an input source code of a program.
    * In result, it will parse it and return an AST of specified program.
    * As a dependency, it uses the lexer which returns stream of tokens.
@@ -22,6 +23,8 @@ class CALCParser {
   constructor(input) {
     this.lexer = new Lexer(input);
     this.currentToken = this.lexer.getNextToken();
+    this.res = [];
+    this.pos = [];
   }
 
   /**
@@ -57,7 +60,22 @@ class CALCParser {
    * @returns {NoOperation}
    */
   empty() {
-    return [];
+    return null;
+  }
+
+  /**
+   * 
+   */
+  handleRange(array, value, start, stop) {
+    // case when initializer only return a value and no start and stop
+    if (!start) { array.push(value); }
+    else { 
+      for (let i=start; i<=stop; i++) { array[i] = value; } 
+      for (let i = 0; i<array.length; i++) {
+        if (!array[i]) array[i] = 0;
+      }
+    }
+
   }
 
   /**
@@ -66,20 +84,19 @@ class CALCParser {
    *
    * @returns {Node}
    */
-  val(array) {
+  val() {
     const token = this.currentToken;
     if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return token.value; }
+    
     if (token.is(Token.LCURLY)) {
       this.eat(Token.LCURLY);
-      array.push([]);
-      this.initializers(array[array.length-1]);
-      return array
-    } 
-    if (token.is(Token.RCURLY)) {  this.eat(Token.RCURLY); return array }
-
-    CALCParser.error(`Invalid Token at the given position ${token}`);
-    
+      const  array = [];
+      this.initializers(array);
+      this.eat(Token.RCURLY);
+      return array;
+    }
   }
+
 
   /**
    * initializers : initializer (',' initializer )* , ?
@@ -88,15 +105,21 @@ class CALCParser {
    * @returns {Node}
    */
   initializers(array) {
-    this.initializer(array);
-
-    while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
-      const token = this.currentToken;
-      if (token.is(Token.COMMA)) {
-        this.eat(Token.COMMA);
-        this.initializer(array);
+    const [value, start, stop] = this.initializer();
+    this.handleRange(array, value, start, stop);
+    if (value) {
+      while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
+        const token = this.currentToken;
+        if (token.is(Token.COMMA)) {
+          this.eat(Token.COMMA);
+          const [value, start, stop] = this.initializer();
+          this.handleRange(array, value, start, stop)
+        }
       }
-    }
+      if(this.currentToken.is(Token.ENDCOMMA)) {
+        this.eat(Token.ENDCOMMA);
+      }
+    } else {  this.empty();  }
   }
 
   /**
@@ -106,29 +129,16 @@ class CALCParser {
    * @returns {Node}
    */
 
-  initializer(array) {
+  initializer() {
     const token = this.currentToken;
     if (token.is(Token.LSQUARE)) {
       this.eat(Token.LSQUARE);
-      const n = this.currentToken.value; // storing the number before eating it.
-      if (typeof n === 'number') { 
-        const min = Math.min(array.length, n);
-        const max = Math.max(array.length, n);
-        for (let i=min; i<max; i++) { array.push(0); }
-      }
+      const start = this.currentToken.value; // storing the number before eating it.
       this.eat(Token.NUMBER);
-      this.temp(array);
-      
-    } else { 
-        const val = this.val(array); 
-        /**
-         * Some Recursives calls are returing array instead of NUMBER, 
-         * Using conditional statement to remoove that bug.
-         */
-        if (typeof val === 'number') {
-          array.push(val); 
-        }
-      }
+      const [value, stop] = this.temp();
+      return !stop ? [value, start, start+1] : [value, start, stop];
+    }
+    return [this.val(), undefined, undefined];
   }
 
   /**
@@ -136,35 +146,32 @@ class CALCParser {
    * 			| '...' INT ']' '=' val
    */
 
-  temp(array) {
+  temp() {
     const token = this.currentToken;
     if (token.is(Token.RSQUARE)) {
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      const val = this.val(array);
-      /**
-       * Some Recursives calls are returing array instead of NUMBER, 
-       * Using conditional statement to remoove that bug.
-       */
-      if (typeof val === 'number') { array.push(val) ; }
+      const v = this.val();
+      return [v, undefined];
     } else if (token.is(Token.RANGE)) {
       this.eat(Token.RANGE);
-      const n = this.currentToken.value; // storing number before eating it
+      const stop = this.currentToken.value; // storing number before eating it
       this.eat(Token.NUMBER);
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      const val = this.val(array);
-      /**
-       * Some Recursives calls are returing array instead of NUMBER, 
-       * Using conditional statement to remoove that bug.
-       */
-      if (typeof val === 'number') {
-        const min = Math.min(array.length, n);
-        const max = Math.max(array.length, n);
-        for(let i=min; i<=max; i++) { array.push(val) };
-      }
-    } else { CALCParser.error(`Invalid syntax, expecting ] or ... and got ${token.value}`); }
+      const v = this.val();
+      return [v, stop];
+    }
   }
+
+
+  // removeNull(array) {
+  //   if (!array) return;
+  //   for(let i =0; i<array.length; i++) {
+  //       if (typeof(array[i]) == "object") this.removeNull(array[i]);
+  //       if (!array[i]) array[i] = 0;
+  //   }
+  // }
 
   /**
    * Parses an input source program and returns an AST.
@@ -177,7 +184,7 @@ class CALCParser {
    * parser.parse(); // return an object that represents an AST of source program
    */
   parse() {
-    return this.val([]);
+    return this.val();
   }
 
   /**
@@ -190,5 +197,12 @@ class CALCParser {
     throw new Error(`[Parser]\n${msg}`);
   }
 }
+
+// Test the code
+const parser = new CALCParser(
+  "{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}"
+);
+;
+console.log(parser.parse())
 
 module.exports = CALCParser;

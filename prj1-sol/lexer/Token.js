@@ -104,6 +104,16 @@ class Token {
     static get COMMA() {
       return ',';
     }
+
+    /**
+     * Returns a Token type for a comma symbol (,).
+     *
+     * @static
+     * @returns {String}
+     */
+    static get ENDCOMMA() {
+      return 'ENDCOMMA';
+    }
   
     /**
      * Returns a Token type for a equal symbol (=).
