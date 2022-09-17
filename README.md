@@ -18,6 +18,12 @@ Email:		ssing163@binghamton.edu
     temp: ']' '=' val | '...' INT ']' '=' val
 ```
 
+# Programming Details
+
+-   Programming Language Used : JavaScript
+-   Engine Used: Node JS
+
+
 # Reference
 [ Ruslan's Blog ](https://ruslanspivak.com/lsbasi-part1/)
 

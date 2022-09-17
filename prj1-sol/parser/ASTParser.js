@@ -1,6 +1,6 @@
 const Token = require("../lexer/Token");
 const _lex = require("../lexer/Lexer");
-
+const AST = require("../ast/Ast")
 /**
  * Parser implementation for a language.
  * Converts stream of tokens into AST.
@@ -59,22 +59,7 @@ class ASTParser {
    * @returns {NoOperation}
    */
   empty() {
-    return null;
-  }
-
-  /**
-   * 
-   */
-  handleRange(array, value, start, stop) {
-    // case when initializer only return a value and no start and stop
-    if (!start) { array.push(value); }
-    else { 
-      for (let i=start; i<=stop; i++) { array[i] = value; } 
-      for (let i = 0; i<array.length; i++) {
-        if (!array[i]) array[i] = 0;
-      }
-    }
-
+    return new AST("ε");
   }
 
   /**
@@ -85,14 +70,13 @@ class ASTParser {
    */
   val() {
     const token = this.currentToken;
-    if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return token.value; }
+    if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return new AST(token.value) }
     
     if (token.is(Token.LCURLY)) {
       this.eat(Token.LCURLY);
-      const  array = [];
-      this.initializers(array);
+      const node = new AST(this.initializers(), Token.LCURLY, Token.RCURLY);
       this.eat(Token.RCURLY);
-      return array;
+      return node;
     }
   }
 
@@ -103,22 +87,24 @@ class ASTParser {
    *
    * @returns {Node}
    */
-  initializers(array) {
-    const [value, start, stop] = this.initializer();
-    this.handleRange(array, value, start, stop);
-    if (value) {
+  initializers() {
+    const nodes = [];
+    const node1 = new AST(this.initializer());
+    nodes.push(node1);
+    if (node1.kids) {
       while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
         const token = this.currentToken;
         if (token.is(Token.COMMA)) {
           this.eat(Token.COMMA);
-          const [value, start, stop] = this.initializer();
-          this.handleRange(array, value, start, stop)
+          const node2 = new AST(this.initializer());
+          nodes.push(node2, ',');
         }
       }
       if(this.currentToken.is(Token.ENDCOMMA)) {
         this.eat(Token.ENDCOMMA);
       }
-    } else {  this.empty();  }
+    } else {  nodes.push(this.empty());  }
+    return nodes;
   }
 
   /**
@@ -134,10 +120,10 @@ class ASTParser {
       this.eat(Token.LSQUARE);
       const start = this.currentToken.value; // storing the number before eating it.
       this.eat(Token.NUMBER);
-      const [value, stop] = this.temp();
-      return !stop ? [value, start, start+1] : [value, start, stop];
+      const node = this.temp();
+      return new AST(node, Token.LSQUARE, start);
     }
-    return [this.val(), undefined, undefined];
+    return new AST(this.val());
   }
 
   /**
@@ -151,7 +137,7 @@ class ASTParser {
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
       const v = this.val();
-      return [v, undefined];
+      return new AST(v, Token.RSQUARE, Token.EQUAL);;
     } else if (token.is(Token.RANGE)) {
       this.eat(Token.RANGE);
       const stop = this.currentToken.value; // storing number before eating it
@@ -159,18 +145,10 @@ class ASTParser {
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
       const v = this.val();
-      return [v, stop];
+      return new AST(v, Token.RANGE, Token.NUMBER, Token.RSQUARE, Token.EQUAL);
     }
   }
 
-
-  // removeNull(array) {
-  //   if (!array) return;
-  //   for(let i =0; i<array.length; i++) {
-  //       if (typeof(array[i]) == "object") this.removeNull(array[i]);
-  //       if (!array[i]) array[i] = 0;
-  //   }
-  // }
 
   /**
    * Parses an input source program and returns an AST.
@@ -183,9 +161,8 @@ class ASTParser {
    * parser.parse(); // return an object that represents an AST of source program
    */
   parse() {
-    const array = this.val();
-    if (array[0] == undefined) { return []; }
-    return array;
+    const tree = new AST("PROGRAM", this.val());
+    return JSON.stringify(tree);
   }
 
   /**
@@ -198,5 +175,7 @@ class ASTParser {
     throw new Error(`[Parser]\n${msg}`);
   }
 }
+
+console.log(new ASTParser("{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}").parse());
 
 module.exports = ASTParser;
