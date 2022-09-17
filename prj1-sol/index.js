@@ -1,6 +1,6 @@
 const lexer = require("./lexer/Lexer");
 const Parser = require("./parser/Parser")
-const ASTParser = require("./parser/AST_Parser")
+const ASTParser = require("./parser/ASTParser")
 const fs = require("fs")
 // read input
 function show_options(expr, outType) {
