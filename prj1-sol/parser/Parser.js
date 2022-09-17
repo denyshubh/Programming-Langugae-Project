@@ -63,7 +63,7 @@ class Parser {
   }
 
   /**
-   * 
+   * this is a helper function used to handle the range ( ... ) operator
    */
   handleRange(array, value, start, stop) {
     // case when initializer only return a value and no start and stop
