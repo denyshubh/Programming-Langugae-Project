@@ -1,10 +1,10 @@
-const Lexer = require("lexer/Lexer");
-const CALCParser = require("parser/CALC_Parser")
-const ASTParser = require("parser/AST_parser")
-
+const lexer = require("./lexer/Lexer");
+const Parser = require("./parser/Parser")
+const ASTParser = require("./parser/AST_Parser")
+const fs = require("fs")
 // read input
 function show_options(expr, outType) {
-    const tokens = Lexer.scan(expr);
+    const tokens = lexer.scan(expr);
     if (tokens.length === 0) return '';
     switch (outType) {
       case 'ast':
@@ -12,9 +12,9 @@ function show_options(expr, outType) {
       case 'tokens':
         return tokens;
       default:
-        return new CALCParser(expr).parse();
+        return new Parser(expr).parse();
     }
 }
 
-const expr = fs.readFileSync(0, 'utf8') // will read from standard input until EOF.
+const expr = fs.readFileSync(0, 'utf8') // will read from standard input until EOF
 console.log(show_options(expr, null));

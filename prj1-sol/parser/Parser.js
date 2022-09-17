@@ -1,6 +1,5 @@
 const Token = require("../lexer/Token");
-const Lexer = require("../lexer/Lexer");
-const AST = require("../ast/Ast");
+const _lex = require("../lexer/Lexer");
 
 /**
  * Parser implementation for a language.
@@ -9,7 +8,7 @@ const AST = require("../ast/Ast");
  * @class
  * @since 1.0.0
  */
-class CALCParser {
+class Parser {
   /** 
    * * Creates new parser instance.
    * It accepts as an input source code of a program.
@@ -21,7 +20,7 @@ class CALCParser {
    * const parser = new Parser('{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}');
    */
   constructor(input) {
-    this.lexer = new Lexer(input);
+    this.lexer = new _lex.Lexer(input);
     this.currentToken = this.lexer.getNextToken();
     this.res = [];
     this.pos = [];
@@ -46,7 +45,7 @@ class CALCParser {
     if (this.currentToken.is(tokenType)) {
       this.currentToken = this.lexer.getNextToken();
     } else {
-      CALCParser.error(
+      Parser.error(
         `You provided unexpected token type "${tokenType}" while current token is ${this.currentToken}`
       );
     }
@@ -184,7 +183,9 @@ class CALCParser {
    * parser.parse(); // return an object that represents an AST of source program
    */
   parse() {
-    return this.val();
+    const array = this.val();
+    if (array[0] == undefined) { return []; }
+    return array;
   }
 
   /**
@@ -198,11 +199,4 @@ class CALCParser {
   }
 }
 
-// Test the code
-const parser = new CALCParser(
-  "{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}"
-);
-;
-console.log(parser.parse())
-
-module.exports = CALCParser;
+module.exports = Parser;

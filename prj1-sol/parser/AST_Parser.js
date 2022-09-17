@@ -1,5 +1,5 @@
 const Token = require("../lexer/Token");
-const Lexer = require("../lexer/Lexer");
+const _lex = require("../lexer/Lexer");
 const AST = require("../ast/Ast");
 
 /**
@@ -21,7 +21,7 @@ class ASTParser {
    * const parser = new Parser('{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}');
    */
   constructor(input) {
-    this.lexer = new Lexer(input);
+    this.lexer = new _lex.Lexer(input);
     this.currentToken = this.lexer.getNextToken();
   }
 
@@ -173,12 +173,5 @@ class ASTParser {
     throw new Error(`[Parser]\n${msg}`);
   }
 }
-
-// Test the code
-const parser = new ASTParser(
-  "{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}"
-);
-const tree = parser.parse();
-console.log(JSON.stringify(tree));
 
 module.exports = ASTParser;
