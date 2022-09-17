@@ -1,6 +1,5 @@
 const Token = require("../lexer/Token");
 const _lex = require("../lexer/Lexer");
-const AST = require("../ast/Ast");
 
 /**
  * Parser implementation for a language.
@@ -10,8 +9,8 @@ const AST = require("../ast/Ast");
  * @since 1.0.0
  */
 class ASTParser {
-  /**
-   * Creates new parser instance.
+  /** 
+   * * Creates new parser instance.
    * It accepts as an input source code of a program.
    * In result, it will parse it and return an AST of specified program.
    * As a dependency, it uses the lexer which returns stream of tokens.
@@ -23,6 +22,8 @@ class ASTParser {
   constructor(input) {
     this.lexer = new _lex.Lexer(input);
     this.currentToken = this.lexer.getNextToken();
+    this.res = [];
+    this.pos = [];
   }
 
   /**
@@ -58,7 +59,22 @@ class ASTParser {
    * @returns {NoOperation}
    */
   empty() {
-    return new AST("ε");
+    return null;
+  }
+
+  /**
+   * 
+   */
+  handleRange(array, value, start, stop) {
+    // case when initializer only return a value and no start and stop
+    if (!start) { array.push(value); }
+    else { 
+      for (let i=start; i<=stop; i++) { array[i] = value; } 
+      for (let i = 0; i<array.length; i++) {
+        if (!array[i]) array[i] = 0;
+      }
+    }
+
   }
 
   /**
@@ -69,13 +85,14 @@ class ASTParser {
    */
   val() {
     const token = this.currentToken;
-    if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return new AST(token.value); }
+    if (token.is(Token.NUMBER)) { this.eat(Token.NUMBER); return token.value; }
     
     if (token.is(Token.LCURLY)) {
       this.eat(Token.LCURLY);
-      const node = this.initializers();
+      const  array = [];
+      this.initializers(array);
       this.eat(Token.RCURLY);
-      return new AST(node, Token.LCURLY, Token.RCURLY);;
+      return array;
     }
   }
 
@@ -86,26 +103,22 @@ class ASTParser {
    *
    * @returns {Node}
    */
-  initializers() {
-    const n1 = this.initializer();
-    if (n1) {
-      const nodes = [];
+  initializers(array) {
+    const [value, start, stop] = this.initializer();
+    this.handleRange(array, value, start, stop);
+    if (value) {
       while ([Token.COMMA].some((type) => this.currentToken.is(type))) {
         const token = this.currentToken;
         if (token.is(Token.COMMA)) {
           this.eat(Token.COMMA);
-          const n2 = this.initializer();
-          nodes.push(new AST(n2, Token.COMMA));
+          const [value, start, stop] = this.initializer();
+          this.handleRange(array, value, start, stop)
         }
       }
       if(this.currentToken.is(Token.ENDCOMMA)) {
         this.eat(Token.ENDCOMMA);
-        return new AST(n1, Token.ENDCOMMA);
       }
-      return nodes;
-    } else {
-      return this.empty()
-    }
+    } else {  this.empty();  }
   }
 
   /**
@@ -119,12 +132,12 @@ class ASTParser {
     const token = this.currentToken;
     if (token.is(Token.LSQUARE)) {
       this.eat(Token.LSQUARE);
-      const n = this.currentToken.value; // storing the number before eating it.
+      const start = this.currentToken.value; // storing the number before eating it.
       this.eat(Token.NUMBER);
-      const node = this.temp();
-      return new AST(Token.LSQUARE, n, node);
+      const [value, stop] = this.temp();
+      return !stop ? [value, start, start+1] : [value, start, stop];
     }
-    return this.val()
+    return [this.val(), undefined, undefined];
   }
 
   /**
@@ -137,16 +150,27 @@ class ASTParser {
     if (token.is(Token.RSQUARE)) {
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      return new AST(Token.RSQUARE, Token.EQUAL, this.val());
+      const v = this.val();
+      return [v, undefined];
     } else if (token.is(Token.RANGE)) {
       this.eat(Token.RANGE);
-      const n = this.currentToken.value; // storing number before eating it
+      const stop = this.currentToken.value; // storing number before eating it
       this.eat(Token.NUMBER);
       this.eat(Token.RSQUARE);
       this.eat(Token.EQUAL);
-      return new AST(Token.RANGE, n, Token.RSQUARE, Token.EQUAL, this.val());
+      const v = this.val();
+      return [v, stop];
     }
   }
+
+
+  // removeNull(array) {
+  //   if (!array) return;
+  //   for(let i =0; i<array.length; i++) {
+  //       if (typeof(array[i]) == "object") this.removeNull(array[i]);
+  //       if (!array[i]) array[i] = 0;
+  //   }
+  // }
 
   /**
    * Parses an input source program and returns an AST.
@@ -159,8 +183,9 @@ class ASTParser {
    * parser.parse(); // return an object that represents an AST of source program
    */
   parse() {
-    const nodes = this.val();
-    return new AST("Program", nodes);
+    const array = this.val();
+    if (array[0] == undefined) { return []; }
+    return array;
   }
 
   /**
