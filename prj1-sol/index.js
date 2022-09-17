@@ -15,3 +15,6 @@ function show_options(expr, outType) {
         return new CALCParser(expr).parse();
     }
 }
+
+const expr = fs.readFileSync(0, 'utf8') // will read from standard input until EOF.
+console.log(show_options(expr, null));
