@@ -20,7 +20,7 @@ Email:		ssing163@binghamton.edu
 
 # Test Report
 
-[Test Report](./prj1-sol/test-result/test.png)
+![Test Report](./prj1-sol/test-result/test.png)
 
 # Programming Details
 
