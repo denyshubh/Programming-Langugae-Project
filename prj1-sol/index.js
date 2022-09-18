@@ -2,8 +2,11 @@ const lexer = require("./lexer/Lexer");
 const Parser = require("./parser/Parser")
 const ASTParser = require("./parser/ASTParser")
 const fs = require("fs")
+
+const outType = process.env.OUT_TYPE;
+
 // read input
-function show_options(expr, outType) {
+function show_options(expr) {
     const tokens = lexer.scan(expr);
     if (tokens.length === 0) return '';
     switch (outType) {
@@ -12,9 +15,9 @@ function show_options(expr, outType) {
       case 'tokens':
         return tokens;
       default:
-        return new Parser(expr).parse();
+        return JSON.stringify(new Parser(expr).parse());
     }
 }
 
 const expr = fs.readFileSync(0, 'utf8') // will read from standard input until EOF
-console.log(show_options(expr, null));
+console.log(show_options(expr));
