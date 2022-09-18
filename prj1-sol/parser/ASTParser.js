@@ -96,6 +96,7 @@ class ASTParser {
         const token = this.currentToken;
         if (token.is(Token.COMMA)) {
           this.eat(Token.COMMA);
+          if (this.currentToken.getValue() === ',') { Parser.error() } // case when consecutive comma occurs. Throw error!
           const node2 = new AST(this.initializer());
           nodes.push(node2, ',');
         }
@@ -175,7 +176,4 @@ class ASTParser {
     throw new Error(`[Parser]\n${msg}`);
   }
 }
-
-console.log(new ASTParser("{22,[6...8] = 33,54, [12 ... 14] = { 44, 33, [4] = { 99, }, },}").parse());
-
 module.exports = ASTParser;

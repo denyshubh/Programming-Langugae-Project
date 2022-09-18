@@ -46,7 +46,7 @@ class Parser {
       this.currentToken = this.lexer.getNextToken();
     } else {
       Parser.error(
-        `You provided unexpected token type "${tokenType}" while current token is ${this.currentToken}`
+        `You provided unexpected token type "${tokenType}" while current token is ${this.currentToken} at postion ${this.lexer.position}`
       );
     }
 
@@ -111,6 +111,7 @@ class Parser {
         const token = this.currentToken;
         if (token.is(Token.COMMA)) {
           this.eat(Token.COMMA);
+          if (this.currentToken.getValue() === ',') { Parser.error(`Invalid Syntax: consecutive comma at position ${this.lexer.position}`) } // case when consecutive comma occurs. Throw error!
           const [value, start, stop] = this.initializer();
           this.handleRange(array, value, start, stop)
         }
@@ -135,7 +136,7 @@ class Parser {
       const start = this.currentToken.value; // storing the number before eating it.
       this.eat(Token.NUMBER);
       const [value, stop] = this.temp();
-      return !stop ? [value, start, start+1] : [value, start, stop];
+      return !stop ? [value, start, start] : [value, start, stop];
     }
     return [this.val(), undefined, undefined];
   }
@@ -184,7 +185,8 @@ class Parser {
    */
   parse() {
     const array = this.val();
-    if (array[0] == undefined) { return []; }
+    if (typeof(array) != "number" && array[0] == undefined) { return []; }
+    if (this.currentToken.type !== "EOF") { Parser.error(`Invalid Syntax: expected EOF and found ${this.currentToken.value} at postion ${this.lexer.position}`)}
     return array;
   }
 
