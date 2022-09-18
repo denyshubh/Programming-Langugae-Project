@@ -18,6 +18,10 @@ Email:		ssing163@binghamton.edu
     temp: ']' '=' val | '...' INT ']' '=' val
 ```
 
+# Test Report
+
+[Test Report](./prj1-sol/test-result/test.png)
+
 # Programming Details
 
 -   Programming Language Used : JavaScript

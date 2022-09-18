@@ -16,7 +16,7 @@ class Lexer {
    * const lexer = new Lexer('2 + 5');
    */
   constructor(input) {
-    this.input = input.replace(/\s+/g, ''); // remove all the whitespace from the input string
+    this.input = input.replace(/(,\s+})/g, ',}'); // remove all the whitespace from the input string
     this.position = 0;
     this.currentChar = this.input[this.position];
   }
