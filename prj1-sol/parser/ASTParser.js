@@ -96,7 +96,7 @@ class ASTParser {
         const token = this.currentToken;
         if (token.is(Token.COMMA)) {
           this.eat(Token.COMMA);
-          if (this.currentToken.getValue() === ',') { Parser.error() } // case when consecutive comma occurs. Throw error!
+          if (this.currentToken.getValue() === ',') { Parser.error(`Invalid Syntax: consecutive comma at position ${this.lexer.position}`) } // case when consecutive comma occurs. Throw error!
           const node2 = new AST(this.initializer());
           nodes.push(node2, ',');
         }
