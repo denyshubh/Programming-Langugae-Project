@@ -5,7 +5,7 @@ B-Number:	B00955182
 Email:		ssing163@binghamton.edu
 ```
 <strong> Project Status: Completed </strong>
-# Context Free Grammer
+# Modified Context Free Grammer (Left Factored)
 ```
     val : INT
         | '{' initializers '}'
