@@ -28,8 +28,8 @@
     '()
     (if (equal? dept (caddr (car employees)))
       (append 
-        (dept-employees dept (cdr employees))
         (list (car employees))
+        (dept-employees dept (cdr employees))
       )
       (dept-employees dept (cdr employees))
     )
@@ -52,11 +52,11 @@
   (if (null? employees)
     '()
     (if (equal? dept (caddr (car employees)))
-      (append 
-        (dept-employees dept (cdr employees))
+      (append
         (list (caar employees))
+        (dept-employees-names dept (cdr employees))
       )
-      (dept-employees dept (cdr employees))
+      (dept-employees-names dept (cdr employees))
     )
   )  
 )
@@ -118,25 +118,40 @@
 ;;cannot use recursion
 ;;Hint: use filter and map
 (define (dept-employees-names-salaries dept employees)
-  'TODO)
+  (map 
+    (lambda (employee) (list (car employee) (cadddr employee)))
+    (filter 
+      (lambda (employee) (equal? dept (caddr employee))) 
+      employees
+    )
+  )
+)
 
-;; (check-equal? (dept-employees-names-salaries 'ece EMPLOYEES) '((joan 110000.00)))
-;; (check-equal? (dept-employees-names-salaries 'cs EMPLOYEES)
-;; 	      '((tom 85000.00)
-;; 		(bill 69500.00)
-;; 		(sue 22000.00)
-;; 		))
-;; (check-equal? (dept-employees 'ce EMPLOYEES) '())
+(check-equal? (dept-employees-names-salaries 'ece EMPLOYEES) '((joan 110000.00)))
+(check-equal? (dept-employees-names-salaries 'cs EMPLOYEES)
+	      '((tom 85000.00)
+		(bill 69500.00)
+		(sue 22000.00)
+		))
+(check-equal? (dept-employees 'ce EMPLOYEES) '())
 
 ;; #6: 15-points
 ;;return average salary of all employees; 0 if employees empty
 ;;cannot use recursion
-;;Hint: use foldl
-(define (employees-average-salary employees)
-  'TODO)
+;;Hint: use foldl from the standard Racket library
+;;(google "racket foldl").
 
-;; (check-equal? (employees-average-salary EMPLOYEES) (/ 344700.00 5))
-;; (check-equal? (employees-average-salary '()) 0)
+(define (employees-average-salary employees)
+
+  ;; Handling Divison By Zero Case
+  (if (null? employees)
+    0
+    (/ (foldl (lambda (x y) (+ (cadddr x) y)) 0 employees) (length employees))
+  )
+)
+
+(check-equal? (employees-average-salary EMPLOYEES) (/ 344700.00 5))
+(check-equal? (employees-average-salary '()) 0)
 
 ;; #7: 20-points
 ;; given an integer or list of nested lists containing integers,
@@ -153,4 +168,3 @@
 ;; (check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
 ;; (check-equal? (int-list-json '()) "[]")
 ;; (check-equal? (int-list-json 42) "42")
-	 
