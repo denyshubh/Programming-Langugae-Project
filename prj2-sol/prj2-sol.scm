@@ -162,12 +162,28 @@
 ;;        use (string-join str-list sep) to join strings in str-list using sep
 ;; also see toJson() methods in java-no-deps Parser.java in prj1-sol
 (define (int-list-json int-list)
-  (if null? int-list)
-    "[]"
-    ()
+  (if (number? int-list)
+    (number->string int-list)
+    (string-append 
+      "["
+      (string-join
+        (map 
+          (lambda (x)
+            (if (number? x) 
+                (number->string x)
+                (int-list-json x)
+            )
+          )
+          int-list
+        )
+       ","
+      )
+      "]"
+    )
+  )
 )
       
-;; (check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
-;; (check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
-;; (check-equal? (int-list-json '()) "[]")
-;; (check-equal? (int-list-json 42) "42")
+(check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
+(check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
+(check-equal? (int-list-json '()) "[]")
+(check-equal? (int-list-json 42) "42")
