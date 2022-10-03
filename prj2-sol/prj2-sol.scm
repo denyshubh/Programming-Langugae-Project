@@ -2,7 +2,8 @@
 
 ;comment out following line to run in repl
 #lang racket
-(require rackunit)
+(require rackunit)         ; includes the general framework
+(require rackunit/text-ui) ; includes (optional) interactions commands 
 
 ;to trace function fn, add (trace fn) after fn's definition
 (require racket/trace)  
@@ -36,14 +37,6 @@
   )
 )
 
-(check-equal? (dept-employees 'ece EMPLOYEES) '((joan 23 ece 110000.00)))
-(check-equal? (dept-employees 'cs EMPLOYEES)
-	      '((tom 33 cs 85000.00)
-		(bill 29 cs 69500.00)
-		(sue 19 cs 22000.00)
-		))
-(check-equal? (dept-employees 'ce EMPLOYEES) '())
-
 ;; #2: 5-points
 ;;return list of names of employees belonging to department dept
 ;;must be implemented recursively
@@ -61,10 +54,6 @@
   )  
 )
 
-(check-equal? (dept-employees-names 'ece EMPLOYEES) '(joan))
-(check-equal? (dept-employees-names 'cs EMPLOYEES) '(tom bill sue))
-(check-equal? (dept-employees-names 'ce EMPLOYEES) '())
-
 ;; #3: 15-points
 ;;Given list indexes containing 0-based indexes and a list possibly
 ;;containing lists nested to an abitrary depth, return the element
@@ -78,21 +67,6 @@
         [#t (list-access (cdr indexes) (list-ref list (car indexes))) ]
   )
 )
-
-(check-equal? (list-access '(1) '(a b c)) 'b)
-(check-equal? (list-access '(2) '(a b (c))) '(c))
-(check-equal? (list-access '(2 0) '(a b (c))) 'c)
-(check-equal? (list-access '(3) '(a b (c))) 'nil)
-(check-equal? (list-access '(2 1) '(a b (c))) 'nil)
-(check-equal? (list-access '() '((1 2 3) (4 (5 6 (8)))) )
-	      '((1 2 3) (4 (5 6 (8)))))
-(check-equal? (list-access '(1) '((1 2 3) (4 (5 6 (8)))) )
-	      '(4 (5 6 (8))))
-(check-equal? (list-access '( 1 1 2) '((1 2 3) (4 (5 6 (8)))) )
-	      '(8))
-(check-equal? (list-access '( 1 1 2 0) '((1 2 3) (4 (5 6 (8)))) )
-	      '8)
-(check-equal? (list-access '(0 1) '((1))) 'nil)
 
 ;; #4: 15-points
 ;;return sum of salaries for all employees
@@ -109,9 +83,6 @@
   )
 )
 
-(check-equal? (employees-salary-sum EMPLOYEES) 344700.00)
-(check-equal? (employees-salary-sum '()) 0)
-
 ;; #5: 15-points
 ;;return list of pairs giving name and salary of employees belonging to
 ;;department dept
@@ -127,14 +98,6 @@
   )
 )
 
-(check-equal? (dept-employees-names-salaries 'ece EMPLOYEES) '((joan 110000.00)))
-(check-equal? (dept-employees-names-salaries 'cs EMPLOYEES)
-	      '((tom 85000.00)
-		(bill 69500.00)
-		(sue 22000.00)
-		))
-(check-equal? (dept-employees-names-salaries 'ce EMPLOYEES) '())
-
 ;; #6: 15-points
 ;;return average salary of all employees; 0 if employees empty
 ;;cannot use recursion
@@ -149,9 +112,6 @@
     (/ (foldl (lambda (x y) (+ (cadddr x) y)) 0 employees) (length employees))
   )
 )
-
-(check-equal? (employees-average-salary EMPLOYEES) (/ 344700.00 5))
-(check-equal? (employees-average-salary '()) 0)
 
 ;; #7: 20-points
 ;; given an integer or list of nested lists containing integers,
@@ -182,8 +142,74 @@
     )
   )
 )
-      
-(check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
-(check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
-(check-equal? (int-list-json '()) "[]")
-(check-equal? (int-list-json 42) "42")
+
+;; Test Suit for Testing all the above functions
+
+(define TESTS
+  (test-suite "Project 2 Testing"
+
+    (test-case "list of employees having department dept"
+      (check-equal? (dept-employees 'ece EMPLOYEES) '((joan 23 ece 110000.00)))
+      (check-equal? (dept-employees 'cs EMPLOYEES)
+              '((tom 33 cs 85000.00)
+          (bill 29 cs 69500.00)
+          (sue 19 cs 22000.00)
+          ))
+      (check-equal? (dept-employees 'ce EMPLOYEES) '())
+    )
+
+    (test-case "list of names of employees belonging to department dept"
+      (check-equal? (dept-employees-names 'ece EMPLOYEES) '(joan))
+      (check-equal? (dept-employees-names 'cs EMPLOYEES) '(tom bill sue))
+      (check-equal? (dept-employees-names 'ce EMPLOYEES) '())
+    )
+
+    (test-case "list access function"
+      (check-equal? (list-access '(1) '(a b c)) 'b)
+      (check-equal? (list-access '(2) '(a b (c))) '(c))
+      (check-equal? (list-access '(2 0) '(a b (c))) 'c)
+      (check-equal? (list-access '(3) '(a b (c))) 'nil)
+      (check-equal? (list-access '(2 1) '(a b (c))) 'nil)
+      (check-equal? (list-access '() '((1 2 3) (4 (5 6 (8)))) )
+              '((1 2 3) (4 (5 6 (8)))))
+      (check-equal? (list-access '(1) '((1 2 3) (4 (5 6 (8)))) )
+              '(4 (5 6 (8))))
+      (check-equal? (list-access '( 1 1 2) '((1 2 3) (4 (5 6 (8)))) )
+              '(8))
+      (check-equal? (list-access '( 1 1 2 0) '((1 2 3) (4 (5 6 (8)))) )
+              '8)
+      (check-equal? (list-access '(0 1) '((1))) 'nil)
+    )
+
+    (test-case "sum of salaries for all employees"
+      (check-equal? (employees-salary-sum EMPLOYEES) 344700.00)
+      (check-equal? (employees-salary-sum '()) 0)
+    )
+
+    (test-case "list of pairs giving name and salary of employees belonging to department dept"
+      (check-equal? (dept-employees-names-salaries 'ece EMPLOYEES) '((joan 110000.00)))
+      (check-equal? (dept-employees-names-salaries 'cs EMPLOYEES)
+              '((tom 85000.00)
+          (bill 69500.00)
+          (sue 22000.00)
+          ))
+      (check-equal? (dept-employees-names-salaries 'ce EMPLOYEES) '())
+    )
+
+    (test-case "average salary of all employee"
+      (check-equal? (employees-average-salary EMPLOYEES) (/ 344700.00 5))
+      (check-equal? (employees-average-salary '()) 0)
+    )
+
+    (test-case "JSON representation"
+      (check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
+      (check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
+      (check-equal? (int-list-json '()) "[]")
+      (check-equal? (int-list-json 42) "42")
+    )
+
+  )
+)
+
+;; Running Tests and generating summary of test report.
+(run-tests TESTS 'verbose)
