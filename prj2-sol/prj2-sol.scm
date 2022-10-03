@@ -133,7 +133,7 @@
 		(bill 69500.00)
 		(sue 22000.00)
 		))
-(check-equal? (dept-employees 'ce EMPLOYEES) '())
+(check-equal? (dept-employees-names-salaries 'ce EMPLOYEES) '())
 
 ;; #6: 15-points
 ;;return average salary of all employees; 0 if employees empty
@@ -162,9 +162,28 @@
 ;;        use (string-join str-list sep) to join strings in str-list using sep
 ;; also see toJson() methods in java-no-deps Parser.java in prj1-sol
 (define (int-list-json int-list)
-  'TODO)
+  (if (number? int-list)
+    (number->string int-list)
+    (string-append 
+      "["
+      (string-join
+        (map 
+          (lambda (x)
+            (if (number? x) 
+                (number->string x)
+                (int-list-json x)
+            )
+          )
+          int-list
+        )
+       ","
+      )
+      "]"
+    )
+  )
+)
       
-;; (check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
-;; (check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
-;; (check-equal? (int-list-json '()) "[]")
-;; (check-equal? (int-list-json 42) "42")
+(check-equal? (int-list-json '(1 2 3)) "[1,2,3]")
+(check-equal? (int-list-json '(1 (2 (4 5) 6))) "[1,[2,[4,5],6]]")
+(check-equal? (int-list-json '()) "[]")
+(check-equal? (int-list-json 42) "42")
