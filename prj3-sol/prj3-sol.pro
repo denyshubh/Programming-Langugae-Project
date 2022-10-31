@@ -83,8 +83,6 @@ test(all) :-
 % % successively by the indexes in Indexes. Match Z with the atom nil if
 % % there is no such element.
 
-% Check if the list is empty
-list_access(_, [], []).
 list_access(1,[],nil).
 % Check if the indexes list if empty
 list_access([], List, List).
