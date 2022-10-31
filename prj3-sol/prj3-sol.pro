@@ -83,8 +83,6 @@ test(all) :-
 % % successively by the indexes in Indexes. Match Z with the atom nil if
 % % there is no such element.
 
-% Check if the list is empty
-list_access(_, [], []).
 list_access(1,[],nil).
 % Check if the indexes list if empty
 list_access([], List, List).
@@ -187,70 +185,70 @@ test(none_divisible_by_3, fail) :-
 % %   If A and B are Prolog regex's, then so is conc(A, B) representing AB.
 % %   If A and B are Prolog regex's, then so is alt(A, B) representing A|B.
 % %   If A is a Prolog regex, then so is kleene(A), representing A*.
-re_match([H|T], [L|Ls]) :- 
-    atomic(H), 
-    L = H,
-    re_match(T, Ls).
+% re_match([H|T], [L|Ls]) :- 
+%     atomic(H), 
+%     L = H,
+%     re_match(T, Ls).
 
-re_match(conc(X), [L|Ls]):-
-    [H|T] = X,
-    L = H,
-    re_match(T, Ls).
+% re_match(conc(X), [L|Ls]):-
+%     [H|T] = X,
+%     L = H,
+%     re_match(T, Ls).
 
-re_match(alt(X), [L|Ls]):-
-    [H|T] = X,
-    L = H;
-    re_match(T, [L|Ls]).
+% re_match(alt(X), [L|Ls]):-
+%     [H|T] = X,
+%     L = H;
+%     re_match(T, [L|Ls]).
 
 
-:- begin_tests(re_match).
-test(single) :-
-    re_match(a, [a]).
-test(single_fail, fail) :-
-    re_match(a, [b]).
-test(conc) :-
-    re_match(conc(a, b), [a, b]).
-test(conc_fail, fail) :-
-    re_match(conc(a, b), [a, c]).
-test(alt1, nondet) :-
-    re_match(alt(a, b), [a]).
-test(alt2, nondet) :-
-    re_match(alt(a, b), [b]).
-test(alt_fail, fail) :-
-    re_match(alt(a, b), [c]).
-test(kleene_empty, nondet) :-
-    re_match(kleene(a), []).
-test(kleene_single, nondet) :-
-    re_match(kleene(a), [a]).
-test(kleene_multiple, nondet) :-
-    re_match(kleene(a), [a, a, a, a]).
-test(conc_kleene_sym, nondet) :-
-    re_match(conc(kleene(a), b), [a, a, a, a, b]).
-test(kleene_kleene0, nondet) :-
-    re_match(conc(kleene(a), kleene(b)), [a, a, a, a]).
-test(kleene_kleene, nondet) :-
-    re_match(conc(kleene(a), kleene(b)), [a, a, a, a, b, b, b]).
-test(kleene_kleene_fail, fail) :-
-    re_match(conc(kleene(a), kleene(b)), [a, a, a, a, b, b, b, a]).
-test(kleene_conc, nondet) :-
-    re_match(kleene(conc(a, b)), [a, b, a, b, a, b]).
-test(kleene_conc_fail, fail) :-
-    re_match(kleene(conc(a, b)), [a, b, a, b, a, b, a]).
-test(kleene_alt, nondet) :-
-    re_match(kleene(alt(a, b)), [a, a, b, a, b, a, b, b]).
-test(conc_kleene_conc, nondet) :-
-    re_match(conc(a, conc(kleene(b), a)), [a, b, b, b, a]).
-test(conc_kleene0_conc, nondet) :-
-    re_match(conc(a, conc(kleene(b), a)), [a, a]).
-test(conc_kleene_conc_fail, fail) :-
-    re_match(conc(a, conc(kleene(b), a)), [a, b, b, b]).
-test(complex1, nondet) :-
-    re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), [a,b,b,a,0,0,1,1]).
-test(complex2, nondet) :-
-    re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), [0,0,1,1]).
-test(complex_empty, nondet) :-
-    re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), []).
-:- end_tests(re_match).
+% :- begin_tests(re_match).
+% test(single) :-
+%     re_match(a, [a]).
+% test(single_fail, fail) :-
+%     re_match(a, [b]).
+% test(conc) :-
+%     re_match(conc(a, b), [a, b]).
+% test(conc_fail, fail) :-
+%     re_match(conc(a, b), [a, c]).
+% test(alt1, nondet) :-
+%     re_match(alt(a, b), [a]).
+% test(alt2, nondet) :-
+%     re_match(alt(a, b), [b]).
+% test(alt_fail, fail) :-
+%     re_match(alt(a, b), [c]).
+% test(kleene_empty, nondet) :-
+%     re_match(kleene(a), []).
+% test(kleene_single, nondet) :-
+%     re_match(kleene(a), [a]).
+% test(kleene_multiple, nondet) :-
+%     re_match(kleene(a), [a, a, a, a]).
+% test(conc_kleene_sym, nondet) :-
+%     re_match(conc(kleene(a), b), [a, a, a, a, b]).
+% test(kleene_kleene0, nondet) :-
+%     re_match(conc(kleene(a), kleene(b)), [a, a, a, a]).
+% test(kleene_kleene, nondet) :-
+%     re_match(conc(kleene(a), kleene(b)), [a, a, a, a, b, b, b]).
+% test(kleene_kleene_fail, fail) :-
+%     re_match(conc(kleene(a), kleene(b)), [a, a, a, a, b, b, b, a]).
+% test(kleene_conc, nondet) :-
+%     re_match(kleene(conc(a, b)), [a, b, a, b, a, b]).
+% test(kleene_conc_fail, fail) :-
+%     re_match(kleene(conc(a, b)), [a, b, a, b, a, b, a]).
+% test(kleene_alt, nondet) :-
+%     re_match(kleene(alt(a, b)), [a, a, b, a, b, a, b, b]).
+% test(conc_kleene_conc, nondet) :-
+%     re_match(conc(a, conc(kleene(b), a)), [a, b, b, b, a]).
+% test(conc_kleene0_conc, nondet) :-
+%     re_match(conc(a, conc(kleene(b), a)), [a, a]).
+% test(conc_kleene_conc_fail, fail) :-
+%     re_match(conc(a, conc(kleene(b), a)), [a, b, b, b]).
+% test(complex1, nondet) :-
+%     re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), [a,b,b,a,0,0,1,1]).
+% test(complex2, nondet) :-
+%     re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), [0,0,1,1]).
+% test(complex_empty, nondet) :-
+%     re_match(conc(kleene(alt(a, b)), kleene(alt(0, 1))), []).
+% :- end_tests(re_match).
 
 % %%% #7 20-points
 % % clausal_form(PrologRules, Form): given a non-empty list PrologRules
