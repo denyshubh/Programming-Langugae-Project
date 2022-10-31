@@ -84,7 +84,8 @@ test(all) :-
 % % there is no such element.
 
 % Check if the list is empty
-list_access(_, [], []). 
+list_access(_, [], []).
+list_access(1,[],nil).
 % Check if the indexes list if empty
 list_access([], List, List).
 % Cocndition if index if greater than length of list
