@@ -185,21 +185,25 @@ test(none_divisible_by_3, fail) :-
 % %   If A and B are Prolog regex's, then so is conc(A, B) representing AB.
 % %   If A and B are Prolog regex's, then so is alt(A, B) representing A|B.
 % %   If A is a Prolog regex, then so is kleene(A), representing A*.
-re_match([H|T], [L|Ls]) :- 
-    atomic(H), 
-    L = H,
-    re_match(T, Ls).
+re_match(Re, [Prefix|Suffix]):-
+    re_match(Re, Prefix, Suffix).
 
-re_match(conc(X), [L|Ls]):-
-    [H|T] = X,
-    L = H,
-    re_match(T, Ls).
+re_match(Re, P, _) :- 
+    atomic(Re),
+    Re = P.
 
-re_match(alt(X), [L|Ls]):-
-    [H|T] = X,
-    L = H;
-    re_match(T, [L|Ls]).
+re_match(alt(RE1, _RE2), P, [H|T]):- re_match(RE1, P, [H|T]).
+re_match(alt(_RE1, RE2), P, [H|T]):- re_match(RE2, P, [H|T]).
 
+re_match(conc(RE1, RE2), P, [H|T]):-
+    re_match(RE1, P, [H|T]),
+    re_match(RE2, H, T).
+
+re_match(kleene(RE), P, [H|T]):-
+    re_match(RE, P, [H|T]),
+    re_match(kleene(RE), H, T).
+
+re_match(kleene(_), _, []).
 
 :- begin_tests(re_match).
 test(single) :-
@@ -258,27 +262,40 @@ test(complex_empty, nondet) :-
 % % disjunction (represented using the infix \/ operator) of literals with
 % % the prefix ~ operator used to indicate negative literals.
 % :- op(200, fx, ~). %declare ~ operator
-% clausal_form(PrologRules, Form) :- 'TODO'(PrologRules, Form).
 
-% :- begin_tests(clausal_form).
-% test(single_head, all(Z = [p(a, b)])) :-
-%     clausal_form([p(a, b)], Z).
-% test(simple_rule, all(Z = [p(a, b) \/ ~q(a, b)])) :-
-%     clausal_form([(p(a, b) :- q(a, b))], Z).
-% test(rule_with_multi_body,
-%      all(Z = [p(a, b) \/ ~q(a, b) \/ ~r(a, b) \/ ~s(x)])) :-
-%     clausal_form([(p(a, b) :- q(a, b), r(a, b), s(x))], Z).
-% test(multi_rule, all(Z = [p(a, b) /\ q(x, y) /\ r(1)])) :-
-%     clausal_form([p(a, b), q(x, y), r(1)], Z).
-% test(complex, all(Z = [Clause1 /\ Clause2 /\ Clause3 /\ Clause4])) :-
-%     Rule1 = (p(a, b) :- q(b, c), r(a, b), s(x)),
-%     Clause1 = p(a, b) \/ ~q(b, c) \/ ~r(a, b) \/ ~s(x),
-%     Rule2 = (m(f(X)) :- n(f(X), Y), X is 2*Y),
-%     Clause2 = m(f(X)) \/ ~n(f(X), Y) \/ ~(X is 2*Y),
-%     Rule3 = append([], Xs, Xs),
-%     Clause3 = append([], Xs, Xs),
-%     Rule4 = (append([A|As], Ys, [A|Zs]) :- append(As, Ys, Zs)),
-%     Clause4 = append([A|As], Ys, [A|Zs]) \/ ~append(As, Ys, Zs),
-%     clausal_form([Rule1, Rule2, Rule3, Rule4], Z).
-% :- end_tests(clausal_form).
+clausal_form([Rule|Rules], Form):-
+    rule_clause(Rule, RuleClause, _),
+    clausal_form(Rules, RuleClause, Form).
 
+clausal_form([], AccForm, AccForm).
+
+clausal_form([Rule|Rules], AccForm, Form):-
+    rule_clause(Rule, RuleClause, _),
+    clausal_form(Rules, AccForm /\ RuleClause, Form).
+
+rule_clause((H,T), Form):- rule_clause(T, Acc, H \/ ~Form).
+rule_clause(Rule, Acc, Acc):- \+ Rule = (:-), \+ Rule = (, ).
+rule_clause((Rule:-R), Acc, Form):- rule_clause(R,Acc,Rule \/ ~Form).
+
+
+:- begin_tests(clausal_form).
+test(single_head, all(Z = [p(a, b)])) :-
+    clausal_form([p(a, b)], Z).
+test(simple_rule, all(Z = [p(a, b) \/ ~q(a, b)])) :-
+    clausal_form([(p(a, b) :- q(a, b))], Z).
+test(rule_with_multi_body,
+     all(Z = [p(a, b) \/ ~q(a, b) \/ ~r(a, b) \/ ~s(x)])) :-
+    clausal_form([(p(a, b) :- q(a, b), r(a, b), s(x))], Z).
+test(multi_rule, all(Z = [p(a, b) /\ q(x, y) /\ r(1)])) :-
+    clausal_form([p(a, b), q(x, y), r(1)], Z).
+test(complex, all(Z = [Clause1 /\ Clause2 /\ Clause3 /\ Clause4])) :-
+    Rule1 = (p(a, b) :- q(b, c), r(a, b), s(x)),
+    Clause1 = p(a, b) \/ ~q(b, c) \/ ~r(a, b) \/ ~s(x),
+    Rule2 = (m(f(X)) :- n(f(X), Y), X is 2*Y),
+    Clause2 = m(f(X)) \/ ~n(f(X), Y) \/ ~(X is 2*Y),
+    Rule3 = append([], Xs, Xs),
+    Clause3 = append([], Xs, Xs),
+    Rule4 = (append([A|As], Ys, [A|Zs]) :- append(As, Ys, Zs)),
+    Clause4 = append([A|As], Ys, [A|Zs]) \/ ~append(As, Ys, Zs),
+    clausal_form([Rule1, Rule2, Rule3, Rule4], Z).
+:- end_tests(clausal_form).
