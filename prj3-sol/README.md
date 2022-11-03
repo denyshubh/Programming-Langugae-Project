@@ -1,10 +1,13 @@
 Name:		SHUBHAM KUMAR SINGH
+
 B-Number:	B00955182
+
 Email:		ssing163@binghamton.edu
+
 
 # Project 3
 
-<strong> Project Status: In Progress </strong>
+<strong> Project Status: Completed </strong>
 
 ## Test Report
 
