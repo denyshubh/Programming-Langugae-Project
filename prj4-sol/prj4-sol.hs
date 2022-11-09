@@ -181,7 +181,8 @@ data Tree t = Leaf t
 -- applying the unary leafFn to the value stored within the Leaf node.
 -- May use recursion.
 foldTree :: (t1 -> t -> t1 -> t1) -> (t -> t1) -> Tree t -> t1
-foldTree _ _ _ = error "TODO"
+foldTree _ leafFn (Leaf t) = leafFn t
+foldTree treeFn leafFn (Tree left v right) = treeFn (foldTree treeFn leafFn left) v (foldTree treeFn leafFn right)
 
 testFoldTree = do
   assertEq "foldTree (left + v + right) (2*v)"
@@ -201,57 +202,59 @@ testFoldTree = do
                                 (Leaf [1, 2, 3, 4, 5, 6]))))
            39
 
--- ------------------------------ flattenTree ------------------------------
--- -- #8: 10-points
--- -- Return list containing flattening of tree.  The elements of the
--- -- list correspond to the elements stored in the tree ordered as per 
--- -- an in-order traversal of the tree. 
--- -- Restriction: May NOT use recursion.  MUST be implemented using foldTree.
--- flattenTree :: Tree a -> [a]
--- flattenTree _ = error "TODO"
+------------------------------ flattenTree ------------------------------
+-- #8: 10-points
+-- Return list containing flattening of tree.  The elements of the
+-- list correspond to the elements stored in the tree ordered as per 
+-- an in-order traversal of the tree. 
+-- Restriction: May NOT use recursion.  MUST be implemented using foldTree.
+flattenTree :: Tree a -> [a]
+flattenTree tree = foldTree (\left v right -> left ++ [v] ++ right) (\v -> [v]) tree
 
--- testFlattenTree = do
---   assertEq "flattenTree Tree Int"
---            (flattenTree (Tree (Tree (Leaf 1) 2 (Leaf 3))
---                               4
---                               (Tree (Leaf 4) 5 (Leaf 6))))
---            [1, 2, 3, 4, 4, 5, 6]
---   assertEq "flattenTree Tree [Int]"
---            (flattenTree (Tree (Tree (Leaf [1]) [1, 2] (Leaf [1, 2, 1]))
---                               [1, 2, 3, 4]
---                               (Tree (Leaf [1, 2, 3, 4])
---                                     [1, 2, 3, 4, 5]
---                                     (Leaf [1, 2, 3, 4, 5, 6]))))
---            [[1], [1, 2], [1, 2, 1], [1, 2, 3, 4],
---             [1, 2, 3, 4], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6]]
---   assertEq "flattenTree Tree String"
---            (flattenTree (Tree (Tree (Leaf "twas") "brillig" (Leaf "and"))
---                               "the"
---                               (Tree (Leaf "slighty") "toves" (Leaf "did"))))
---            [ "twas", "brillig", "and", "the", "slighty", "toves", "did" ]
 
--- ---------------------------- catenateTree -------------------------------
--- -- #9: 10-points
--- -- Given tree of type (Tree [t]) return list which is concatenation
--- -- of all lists in tree.
--- -- Restriction: May NOT use recursion. MUST be implemented using flattenTree.
--- catenateTreeLists :: Tree [a] -> [a]
--- catenateTreeLists _ = error "TODO"
+testFlattenTree = do
+  assertEq "flattenTree Tree Int"
+           (flattenTree (Tree (Tree (Leaf 1) 2 (Leaf 3))
+                              4
+                              (Tree (Leaf 4) 5 (Leaf 6))))
+           [1, 2, 3, 4, 4, 5, 6]
+  assertEq "flattenTree Tree [Int]"
+           (flattenTree (Tree (Tree (Leaf [1]) [1, 2] (Leaf [1, 2, 1]))
+                              [1, 2, 3, 4]
+                              (Tree (Leaf [1, 2, 3, 4])
+                                    [1, 2, 3, 4, 5]
+                                    (Leaf [1, 2, 3, 4, 5, 6]))))
+           [[1], [1, 2], [1, 2, 1], [1, 2, 3, 4],
+            [1, 2, 3, 4], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6]]
+  assertEq "flattenTree Tree String"
+           (flattenTree (Tree (Tree (Leaf "twas") "brillig" (Leaf "and"))
+                              "the"
+                              (Tree (Leaf "slighty") "toves" (Leaf "did"))))
+           [ "twas", "brillig", "and", "the", "slighty", "toves", "did" ]
 
--- testCatenateTreeLists = do
---   assertEq "catenateTreeLists Tree [Int]"
---            (catenateTreeLists (Tree (Tree (Leaf [1]) [1, 2] (Leaf [1, 2, 1]))
---                               [1, 2, 3, 4]
---                               (Tree (Leaf [1, 2, 3, 4])
---                                     [1, 2, 3, 4, 5]
---                                     (Leaf [1, 2, 3, 4, 5, 6]))))
---            [1, 1, 2, 1, 2, 1, 1, 2, 3, 4,
---             1, 2, 3, 4, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6]
---   assertEq "catenateTreeLists Tree String"
---            (catenateTreeLists (Tree (Tree (Leaf "twas") "brillig" (Leaf "and"))
---                               "the"
---                               (Tree (Leaf "slighty") "toves" (Leaf "did"))))
---            "twasbrilligandtheslightytovesdid"
+---------------------------- catenateTree -------------------------------
+-- #9: 10-points
+-- Given tree of type (Tree [t]) return list which is concatenation
+-- of all lists in tree.
+-- Restriction: May NOT use recursion. MUST be implemented using flattenTree.
+catenateTreeLists :: Tree [a] -> [a]
+catenateTreeLists tree = [ y | x <- flattenTree tree, y <- x]
+
+
+testCatenateTreeLists = do
+  assertEq "catenateTreeLists Tree [Int]"
+           (catenateTreeLists (Tree (Tree (Leaf [1]) [1, 2] (Leaf [1, 2, 1]))
+                              [1, 2, 3, 4]
+                              (Tree (Leaf [1, 2, 3, 4])
+                                    [1, 2, 3, 4, 5]
+                                    (Leaf [1, 2, 3, 4, 5, 6]))))
+           [1, 1, 2, 1, 2, 1, 1, 2, 3, 4,
+            1, 2, 3, 4, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6]
+  assertEq "catenateTreeLists Tree String"
+           (catenateTreeLists (Tree (Tree (Leaf "twas") "brillig" (Leaf "and"))
+                              "the"
+                              (Tree (Leaf "slighty") "toves" (Leaf "did"))))
+           "twasbrilligandtheslightytovesdid"
 
 
 ----------------------------- Run All Tests -----------------------------
@@ -264,5 +267,5 @@ testAll = do
   testExpn
   testCharIndexes
   testFoldTree
-  -- testFlattenTree
-  -- testCatenateTreeLists
+  testFlattenTree
+  testCatenateTreeLists
