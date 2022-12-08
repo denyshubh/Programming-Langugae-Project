@@ -18,12 +18,12 @@
 -define(test_find_employees, enabled).
 -define(test_employees_req, enabled).
 -define(test_employees_req_with_sort, enabled).
-% -define(test_employees_client_no_sort, enabled).
-% -define(test_employees_client_with_sort_dosort, enabled).
-% -define(test_employees_client_with_sort, enabled).
-% -define(test_employees_client_no_sort_mutate, enabled).
-% -define(test_employees_client_with_sort_mutate, enabled).
-% -define(test_employees_client_hot_reload, enabled).
+-define(test_employees_client_no_sort, enabled).
+-define(test_employees_client_with_sort_dosort, enabled).
+-define(test_employees_client_with_sort, enabled).
+-define(test_employees_client_no_sort_mutate, enabled).
+-define(test_employees_client_with_sort_mutate, enabled).
+-define(test_employees_client_hot_reload, enabled).
 -if(false).  %move this down to just before -endif when project completed
 -endif.
 
@@ -440,16 +440,34 @@ employees_req_with_sort_test_() ->
 % The actual messages returned to the client should always include the
 % server's PID, so they look like { self(), Response } where Response is
 % the response described above.
-start_employees_server(Employees, Fn) -> 'TODO'.
+start_employees_server(Employees, Fn) -> register(emps, spawn(?MODULE, employee_server, [Employees, Fn])), whereis(emps).
+
+employee_server(Employees, Fn) ->
+  receive
+    {ClientPid, {new_fn, Fn1}} ->
+      ClientPid ! {self(), {ok, void}},
+      employee_server(Employees, Fn1);
+
+    {ClientPid, stop} ->
+      ClientPid ! {self(), {ok, stopped} };
+
+    {ClientPid, Req} ->
+        {Status, Result, Employees1} = Fn(Req, Employees),
+        ClientPid ! {self(), {Status, Result}},
+        employee_server(Employees1, Fn)
+  end.
 
 % stop previously started server with registered ID emps.
 % should return {ok, stopped}.
-stop_employees_server(X, Y) -> 'TODO'.
+stop_employees_server() -> employees_client(stop).
 
 % set request Req to server registered under ID emps and return 
 % Result from server.
-employees_client(Req) -> 'TODO'.
-
+employees_client(Req) -> whereis(emps) ! {self(), Req},
+  receive
+    {_,Response} -> Response
+  end.
+  
 
 %% map employees_req test to a employees_client test
 make_employees_client_test_specs(Specs) ->

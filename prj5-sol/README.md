@@ -11,4 +11,6 @@ Email:		ssing163@binghamton.edu
 
 ## Test Report
 
-In Progress
+The code passes all the given test cases. You can find the result screenshot below
+
+![Test Report](./test-result/test.png)
