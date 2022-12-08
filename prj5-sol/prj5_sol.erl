@@ -10,7 +10,6 @@
 %% enable all tests before submission.
 %% the skeleton file is distributed with all tests are deactivated
 
--if(false).  %move this down to just before -endif when project completed
 -define(test_dept_employees1, enabled).
 -define(test_dept_employees2, enabled).
 -define(test_dept_employees3, enabled).
@@ -25,6 +24,7 @@
 % -define(test_employees_client_no_sort_mutate, enabled).
 % -define(test_employees_client_with_sort_mutate, enabled).
 % -define(test_employees_client_hot_reload, enabled).
+-if(false).  %move this down to just before -endif when project completed
 -endif.
 
 %% Tracing Tests: set trace_level as desired.
@@ -131,7 +131,7 @@ upsert_employees() -> [ ?Tom1, ?Jane1, ?Joe1 ].
 % functions.
 dept_employees1(Dept, Employees) -> dept_employees1_tail(Dept, Employees, []).
 
-dept_employees1_tail(_, [], Agg) -> Agg;
+dept_employees1_tail(_, [], Agg) -> lists:reverse(Agg);
 dept_employees1_tail(Dept, [Emp|Emps], Agg) -> 
   case Emp#employee.dept =:= Dept of
     true ->  dept_employees1_tail(Dept, Emps, [Emp|Agg]);
@@ -221,8 +221,8 @@ upsert_employee(E, Employees) -> upsert_employee_tail(E, Employees, [], 0).
 
 upsert_employee_tail(E, [], Agg, Flag) -> 
   case Flag =:= 1 of
-    true -> Agg;
-    false -> [E|Agg]
+    true -> lists:reverse(Agg);
+    false -> lists:reverse([E|Agg])
   end;
 
 upsert_employee_tail(E, [E1|Emps], Agg, Flag) -> 
@@ -326,15 +326,15 @@ find_employees_test_() ->
 % for example: lists:flatten(io_lib:format("bad Req ~p", [Req]))
 employees_req(Req, Employees) ->
    case Req of 
-    {delete, Name} -> {ok_result, void, delete_employee(Name, Employees)};
-    {dump}-> {ok_result, Employees, Employees};
-    {find, Preds}-> {ok_result, find_employees(Preds, Employees), Employees};
+    {delete, Name} -> {ok, void, delete_employee(Name, Employees)};
+    {dump}-> {ok, Employees, Employees};
+    {find, Preds}-> {ok, find_employees(Preds, Employees), Employees};
     {read, Name} -> case find_employees([employee_has_name(Name)], Employees) of
-                      [Result] -> {ok_result, Result, Employees};
-                      [] -> {_,Y} = Req, {error_result, io_lib:format("~s not found", [Y]), Employees}
+                      [Result] -> {ok, Result, Employees};
+                      [] -> {_,Y} = Req, {err, io_lib:format("~s not found", [Y]), Employees}
                     end;
-    {upsert, Employee} -> {ok_result, void, upsert_employee(Employee, Employees)};
-    _ -> {error_result, lists:flatten(io_lib:format("bad Req ~p", [Req])), Employees}
+    {upsert, Employee} -> {ok, void, upsert_employee(Employee, Employees)};
+    _ -> {err, lists:flatten(io_lib:format("bad Req ~p", [Req])), Employees}
   end.
 
 
@@ -440,11 +440,11 @@ employees_req_with_sort_test_() ->
 % The actual messages returned to the client should always include the
 % server's PID, so they look like { self(), Response } where Response is
 % the response described above.
-start_employees_server(Employees, Fn) -> spawn(?MODULE, Fn, [Employees]).
+start_employees_server(Employees, Fn) -> 'TODO'.
 
 % stop previously started server with registered ID emps.
 % should return {ok, stopped}.
-stop_employees_server() -> 'TODO'.
+stop_employees_server(X, Y) -> 'TODO'.
 
 % set request Req to server registered under ID emps and return 
 % Result from server.
