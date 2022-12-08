@@ -14,11 +14,11 @@
 -define(test_dept_employees1, enabled).
 -define(test_dept_employees2, enabled).
 -define(test_dept_employees3, enabled).
-% -define(test_delete_employee, enabled).
-% -define(test_upsert_employee, enabled).
-% -define(test_find_employees, enabled).
-% -define(test_employees_req, enabled).
-% -define(test_employees_req_with_sort, enabled).
+-define(test_delete_employee, enabled).
+-define(test_upsert_employee, enabled).
+-define(test_find_employees, enabled).
+-define(test_employees_req, enabled).
+-define(test_employees_req_with_sort, enabled).
 % -define(test_employees_client_no_sort, enabled).
 % -define(test_employees_client_with_sort_dosort, enabled).
 % -define(test_employees_client_with_sort, enabled).
@@ -188,7 +188,7 @@ dept_employees3_test_() ->
 % Given a list Employees of employees, return sublist of Employees
 % with employee with name=Name removed.  It is ok if Name does not exist.
 % Hint: use a list comprehension 
-delete_employee(Name, Employees) -> 'TODO'.
+delete_employee(Name, Employees) -> [X || X <- Employees, X#employee.name =/= Name].
 
 %% returns list of pairs: { Args, Result }, where Args is list of
 %% arguments to function and Result should be the value returned
@@ -217,7 +217,20 @@ delete_employee_test_() ->
 % an employee E1 with E1.name == E.name, then return Employees
 % with E1 replaced by E, otherwise return Employees with
 % [E] appended.
-upsert_employee(E, Employees) -> 'TODO'.
+upsert_employee(E, Employees) -> upsert_employee_tail(E, Employees, [], 0).
+
+upsert_employee_tail(E, [], Agg, Flag) -> 
+  case Flag =:= 1 of
+    true -> Agg;
+    false -> [E|Agg]
+  end;
+
+upsert_employee_tail(E, [E1|Emps], Agg, Flag) -> 
+  case E#employee.name =:= E1#employee.name of
+    true -> upsert_employee_tail(E, Emps, [E|Agg], 1);
+    false -> upsert_employee_tail(E, Emps, [E1|Agg], Flag)
+  end.
+
 
 
 %% returns list of pairs: { Args, Result }, where Args is list of
@@ -254,7 +267,11 @@ upsert_employee_test_() ->
 % for which all P in Preds return true.
 % Restriction: may not use recursion.
 % Hint: consider using a list comprehension with lists:all/2.
-find_employees(Preds, Employees) -> 'TODO'.
+
+find_employees([], Employees) -> Employees;
+find_employees([P| Preds], Employees) -> find_employees(Preds, [X || X <- Employees, lists:all(P, [X])]).
+    
+
 
 find_employees_test_specs() -> 
   Es = ?Employees,
@@ -307,7 +324,19 @@ find_employees_test_() ->
 %   _:                    return an error-result with a suitable ErrString.
 % Hint: use io_lib:format(Format, Args) to build suitable error strings,
 % for example: lists:flatten(io_lib:format("bad Req ~p", [Req]))
-employees_req(Req, Employees) -> 'TODO'.
+employees_req(Req, Employees) ->
+   case Req of 
+    {delete, Name} -> {ok_result, void, delete_employee(Name, Employees)};
+    {dump}-> {ok_result, Employees, Employees};
+    {find, Preds}-> {ok_result, find_employees(Preds, Employees), Employees};
+    {read, Name} -> case find_employees([employee_has_name(Name)], Employees) of
+                      [Result] -> {ok_result, Result, Employees};
+                      [] -> {_,Y} = Req, {error_result, io_lib:format("~s not found", [Y]), Employees}
+                    end;
+    {upsert, Employee} -> {ok_result, void, upsert_employee(Employee, Employees)};
+    _ -> {error_result, lists:flatten(io_lib:format("bad Req ~p", [Req])), Employees}
+  end.
+
 
 %% map upsert_employee_test_specs into args-result pairs suitable
 %% for employees_req({upsert, _}, ...).
@@ -361,7 +390,11 @@ employees_req_test_() ->
 % { sort } which should return { ok, void, SortedEmployees }
 % where SortedEmployees is Employees sorted in ascending order by name.
 % Hint: use lists:sort/2 to sort, delegate all non-sort Fns to employees_req/2.
-employees_req_with_sort(Req, Employees) -> 'TODO'.
+employees_req_with_sort(Req, Employees) -> 
+  case Req of
+    {sort } -> {ok, void, lists:sort(fun (X, Y) -> Y#employee.name > X#employee.name end, Employees)};
+    _ -> employees_req(Req, Employees)
+  end.
 
 employees_req_with_sort_test_specs() ->
     [ { sort, [{sort}, ?Employees], { ok, void, ?SortedEmployees } } ] ++
@@ -407,7 +440,7 @@ employees_req_with_sort_test_() ->
 % The actual messages returned to the client should always include the
 % server's PID, so they look like { self(), Response } where Response is
 % the response described above.
-start_employees_server(Employees, Fn) -> 'TODO'.
+start_employees_server(Employees, Fn) -> spawn(?MODULE, Fn, [Employees]).
 
 % stop previously started server with registered ID emps.
 % should return {ok, stopped}.
