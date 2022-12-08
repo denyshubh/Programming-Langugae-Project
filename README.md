@@ -12,3 +12,5 @@ Email:		ssing163@binghamton.edu
 [Project-3 Docs](./prj3-sol/README.md)
 
 [Project-4 Docs](./prj4-sol/README.md)
+
+[Project-5 Docs](./prj5-sol/README.md)
